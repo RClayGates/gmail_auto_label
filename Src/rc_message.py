@@ -77,7 +77,7 @@ def message_modify(_message_id, _label_id, _service, _clean_inbox:bool = False):
         "removeLabelIds": []
     }
     if _clean_inbox:
-        label_obj['removeLabelIds'].append('inbox')
+        label_obj['removeLabelIds'].append('INBOX')
     try:
         result = _service.users().messages().modify(
             userId='me', id=_message_id, body=label_obj).execute()
