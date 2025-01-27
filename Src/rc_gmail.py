@@ -3,18 +3,18 @@ import os
 from time import perf_counter
 
 # import: non-std
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.external_account_authorized_user import Credentials as eaau_Credentials
+from googleapiclient.discovery import build     # type: ignore
+from google.oauth2.credentials import Credentials   # type: ignore
+from google.auth.transport.requests import Request  # type: ignore
+from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore
+from google.auth.external_account_authorized_user import Credentials as eaau_Credentials # type: ignore
 # from googleapiclient.errors import HttpError
 
 # import: local
-from rc_logger import logger
-from rc_filter import filter_create
-from rc_message import create_domain_dict, message_modify, messages_list, message_get
-from rc_label import label_create, label_delete, labels_list
+from rc_logger import logger    # type: ignore
+from rc_filter import filter_create, filter_get, filter_list, filter_delete # type: ignore
+from rc_message import create_domain_dict, message_modify, messages_list, message_get   # type: ignore
+from rc_label import label_create, label_delete, labels_list    # type: ignore
 
 # const/globals
 log = logger()
@@ -24,10 +24,12 @@ log = logger()
 
 def main():
     # delete_user_labels()
+    # delete_domain_filters()
     # populate_domain_labels()
     # populate_domain_filters()
-    # update_message_labels(_clean_inbox =True)
+    # update_message_labels(_clean_inbox = True)
     pass
+
 # code blocks
 
 
@@ -64,6 +66,14 @@ def populate_domain_filters() -> None:
                 log.debug(f'{label_id=}')
                 log.debug(f'{addr_from=}')
                 filter_create(service, label_id, addr_from)
+
+def delete_domain_filters() -> None:
+    service = gmail_setup()
+    f_list = filter_list(service)
+    for filters in f_list.values():
+        for filter in filters:
+            filter_delete(service, filter['id'])
+
 
 
 def populate_domain_labels() -> None:
@@ -113,6 +123,8 @@ def gmail_setup() -> Credentials | eaau_Credentials | None:
             service = build("gmail", "v1", credentials=creds)
             return service
         else:
+            if not os.path.exists(cred_path):
+                raise RuntimeError("Are credentials.json downloaded into .env?")
             flow = InstalledAppFlow.from_client_secrets_file(
                 cred_path, scopes
             )
@@ -120,8 +132,10 @@ def gmail_setup() -> Credentials | eaau_Credentials | None:
             # Save the credentials for the next run
             with open(token_path, "w") as token:
                 token.write(creds.to_json())
-            service = build("gmail", "v1", credentials=creds)
-            return service
+        service = build("gmail", "v1", credentials=creds)
+        return service
+    else:
+        return None
 
 
 if __name__ == '__main__':
